@@ -6,9 +6,12 @@ import {
   Delete,
   Body,
   Param,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 import { BuildingsService } from './buildings.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('organizations/:organizationId/buildings')
 export class BuildingsController {
   constructor(private buildingsService: BuildingsService) {}

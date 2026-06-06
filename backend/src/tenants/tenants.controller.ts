@@ -5,14 +5,16 @@ import {
   Patch,
   Body,
   Param,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 import { TenantsService } from './tenants.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('organizations/:organizationId/tenants')
 export class TenantsController {
   constructor(private tenantsService: TenantsService) {}
 
-  // POST /organizations/:organizationId/tenants
   @Post()
   async create(
     @Param('organizationId') organizationId: string,
@@ -31,19 +33,16 @@ export class TenantsController {
     return this.tenantsService.create({ ...body, organizationId });
   }
 
-  // GET /organizations/:organizationId/tenants
   @Get()
   async findAll(@Param('organizationId') organizationId: string) {
     return this.tenantsService.findAll(organizationId);
   }
 
-  // GET /organizations/:organizationId/tenants/active
   @Get('active')
   async findActive(@Param('organizationId') organizationId: string) {
     return this.tenantsService.findActive(organizationId);
   }
 
-  // GET /organizations/:organizationId/tenants/:id
   @Get(':id')
   async findOne(
     @Param('organizationId') organizationId: string,
@@ -52,7 +51,6 @@ export class TenantsController {
     return this.tenantsService.findById(id, organizationId);
   }
 
-  // PATCH /organizations/:organizationId/tenants/:id/notice
   @Patch(':id/notice')
   async giveNotice(
     @Param('organizationId') organizationId: string,
@@ -62,7 +60,6 @@ export class TenantsController {
     return this.tenantsService.giveNotice(id, organizationId, body.noticeDate);
   }
 
-  // PATCH /organizations/:organizationId/tenants/:id/vacate
   @Patch(':id/vacate')
   async vacate(
     @Param('organizationId') organizationId: string,
@@ -72,7 +69,6 @@ export class TenantsController {
     return this.tenantsService.vacate(id, organizationId, body.moveOutDate);
   }
 
-  // PATCH /organizations/:organizationId/tenants/:id
   @Patch(':id')
   async update(
     @Param('organizationId') organizationId: string,

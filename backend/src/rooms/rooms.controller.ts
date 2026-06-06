@@ -5,15 +5,17 @@ import {
   Patch,
   Body,
   Param,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoomsService } from './rooms.service';
 import { RoomType } from './room.entity';
 
+@UseGuards(JwtAuthGuard)
 @Controller('organizations/:organizationId/buildings/:buildingId/rooms')
 export class RoomsController {
   constructor(private roomsService: RoomsService) {}
 
-  // POST /organizations/:organizationId/buildings/:buildingId/rooms
   @Post()
   async create(
     @Param('organizationId') organizationId: string,
@@ -31,7 +33,6 @@ export class RoomsController {
     return this.roomsService.create({ ...body, buildingId, organizationId });
   }
 
-  // GET /organizations/:organizationId/buildings/:buildingId/rooms
   @Get()
   async findAll(
     @Param('organizationId') organizationId: string,
@@ -40,7 +41,6 @@ export class RoomsController {
     return this.roomsService.findAll(buildingId, organizationId);
   }
 
-  // GET /organizations/:organizationId/buildings/:buildingId/rooms/vacant
   @Get('vacant')
   async findVacant(
     @Param('organizationId') organizationId: string,
@@ -49,7 +49,6 @@ export class RoomsController {
     return this.roomsService.findVacant(buildingId, organizationId);
   }
 
-  // GET /organizations/:organizationId/buildings/:buildingId/rooms/:id
   @Get(':id')
   async findOne(
     @Param('organizationId') organizationId: string,
@@ -58,7 +57,6 @@ export class RoomsController {
     return this.roomsService.findById(id, organizationId);
   }
 
-  // PATCH /organizations/:organizationId/buildings/:buildingId/rooms/:id
   @Patch(':id')
   async update(
     @Param('organizationId') organizationId: string,
@@ -76,7 +74,6 @@ export class RoomsController {
     return this.roomsService.update(id, organizationId, body);
   }
 
-  // PATCH /organizations/:organizationId/buildings/:buildingId/rooms/:id/vacate
   @Patch(':id/vacate')
   async vacate(
     @Param('organizationId') organizationId: string,
