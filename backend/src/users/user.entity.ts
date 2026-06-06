@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 export enum UserRole {
   LANDLORD = 'landlord',
@@ -35,8 +36,9 @@ export class User {
   @Column({ unique: true, nullable: true })
   phone: string;
 
-  @Column({ nullable: true })
-  password: string;
+ @Exclude()
+@Column({ nullable: true })
+password: string;
 
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
