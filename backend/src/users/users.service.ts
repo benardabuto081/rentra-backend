@@ -69,4 +69,8 @@ export class UsersService {
   ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
+
+  async updateOrganization(userId: string, organizationId: string): Promise<void> {
+    await this.usersRepository.update(userId, { organizationId });
+  }
 }

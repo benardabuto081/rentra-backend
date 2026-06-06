@@ -11,6 +11,7 @@ import { Passkey, PasskeyStatus } from './passkey.entity';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/user.entity';
 import * as crypto from 'crypto';
+import { OrganizationsService } from '../organizations/organizations.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     private passkeyRepository: Repository<Passkey>,
     private usersService: UsersService,
     private jwtService: JwtService,
+    private organizationsService: OrganizationsService,
   ) {}
 
   // LANDLORD REGISTRATION
@@ -32,11 +34,21 @@ export class AuthService {
     if (existing) {
       throw new BadRequestException('Email already registered');
     }
-    const user = await this.usersService.createLandlord(data);
-    const token = this.generateToken(user.id, user.role);
-    return { user, token };
-  }
 
+    const user = await this.usersService.createLandlord(data);
+
+    const organization = await this.organizationsService.create({
+      name: `${data.firstName}'s Organization`,
+      ownerId: user.id,
+      email: data.email,
+    });
+
+    await this.usersService.updateOrganization(user.id, organization.id);
+
+    const token = this.generateToken(user.id, user.role);
+    return { user, organization, token };
+  }
+  
   // LANDLORD / CARETAKER LOGIN
   async login(data: { email: string; password: string }) {
     const user = await this.usersService.findByEmail(data.email);
