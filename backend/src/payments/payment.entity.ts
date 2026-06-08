@@ -89,6 +89,12 @@ export class Payment {
   notes: string;
 
   @Column({ type: 'timestamp', nullable: true })
+  dueDate: Date | null;
+
+  @Column({ type: 'int', nullable: true, default: 0 })
+  daysLate: number;
+
+  @Column({ type: 'timestamp', nullable: true })
   paidAt: Date | null;
 
   @CreateDateColumn()

@@ -21,17 +21,26 @@ export class PaymentsService {
     amountPaid: number;
     month: number;
     year: number;
+    dueDate?: Date;
     mpesaCode?: string;
     notes?: string;
   }): Promise<Payment> {
     const status = this.calculateStatus(data.amount, data.amountPaid);
     const receiptNumber = this.generateReceiptNumber();
+    const paidAt = data.amountPaid > 0 ? new Date() : null;
+
+    let daysLate = 0;
+    if (data.dueDate && paidAt) {
+      const diff = paidAt.getTime() - new Date(data.dueDate).getTime();
+      daysLate = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+    }
 
     const payment = this.paymentsRepository.create({
       ...data,
       status,
       receiptNumber,
-      paidAt: data.amountPaid > 0 ? new Date() : null,
+      paidAt,
+      daysLate,
     });
 
     return this.paymentsRepository.save(payment);
@@ -100,7 +109,6 @@ export class PaymentsService {
     },
   ): Promise<Payment> {
     const payment = await this.findById(id, organizationId);
-
     const newAmountPaid = data.amountPaid ?? Number(payment.amountPaid);
     const status = this.calculateStatus(Number(payment.amount), newAmountPaid);
 
@@ -124,7 +132,6 @@ export class PaymentsService {
     paymentCount: number;
   }> {
     const payments = await this.findByMonth(organizationId, month, year);
-
     const totalExpected = payments.reduce((sum, p) => sum + Number(p.amount), 0);
     const totalCollected = payments.reduce((sum, p) => sum + Number(p.amountPaid), 0);
     const totalArrears = totalExpected - totalCollected;

@@ -2,15 +2,17 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant, TenantStatus } from './tenant.entity';
+import { RoomsService } from '../rooms/rooms.service';
 
 @Injectable()
 export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
     private tenantsRepository: Repository<Tenant>,
+    private roomsService: RoomsService,
   ) {}
 
-  async create(data: {
+   async create(data: {
     userId: string;
     roomId: string;
     buildingId: string;
@@ -34,7 +36,16 @@ export class TenantsService {
       ...data,
       status: TenantStatus.ACTIVE,
     });
-    return this.tenantsRepository.save(tenant);
+    const savedTenant = await this.tenantsRepository.save(tenant);
+
+    // Auto-update room status to occupied
+    await this.roomsService.assignTenant(
+      data.roomId,
+      data.organizationId,
+      savedTenant.id,
+    );
+
+    return savedTenant;
   }
 
   async findAll(organizationId: string): Promise<Tenant[]> {
@@ -93,6 +104,10 @@ export class TenantsService {
       status: TenantStatus.VACATED,
       moveOutDate,
     });
+
+    // Auto-update room status to vacant
+    await this.roomsService.vacateRoom(tenant.roomId, organizationId);
+
     return this.findById(id, organizationId);
   }
 

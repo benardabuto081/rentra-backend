@@ -24,7 +24,7 @@ export class AuthService {
   ) {}
 
   // LANDLORD REGISTRATION
-  async registerLandlord(data: {
+ async registerLandlord(data: {
     firstName: string;
     lastName: string;
     email: string;
@@ -45,8 +45,10 @@ export class AuthService {
 
     await this.usersService.updateOrganization(user.id, organization.id);
 
+    const updatedUser = await this.usersService.findById(user.id);
+
     const token = this.generateToken(user.id, user.role);
-    return { user, organization, token };
+    return { user: updatedUser, organization, token };
   }
   
   // LANDLORD / CARETAKER LOGIN

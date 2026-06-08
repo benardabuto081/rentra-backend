@@ -53,6 +53,9 @@ password: string;
   @Column({ nullable: true })
   organizationId: string;
 
+  @Column({ nullable: true })
+  nationalId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
