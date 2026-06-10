@@ -37,6 +37,9 @@ export class Building {
   @Column({ nullable: true })
   description: string;
 
+  @Column({ nullable: true })
+  propertyType: string;
+
   @Column({
     type: 'enum',
     enum: BuildingStatus,

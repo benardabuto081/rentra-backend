@@ -7,6 +7,7 @@ class BuildingModel {
   final String? county;
   final int? totalFloors;
   final String? description;
+  final String? propertyType;
   final String status;
   final DateTime createdAt;
 
@@ -19,6 +20,7 @@ class BuildingModel {
     this.county,
     this.totalFloors,
     this.description,
+    this.propertyType,
     required this.status,
     required this.createdAt,
   });
@@ -33,6 +35,7 @@ class BuildingModel {
       county: json['county'],
       totalFloors: json['totalFloors'],
       description: json['description'],
+      propertyType: json['propertyType'],
       status: json['status'],
       createdAt: DateTime.parse(json['createdAt']),
     );
@@ -46,6 +49,7 @@ class BuildingModel {
       'county': county,
       'totalFloors': totalFloors,
       'description': description,
+      'propertyType': propertyType,
     };
   }
 }
