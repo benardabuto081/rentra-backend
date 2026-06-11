@@ -4,39 +4,31 @@ backend/dist/
 backend/.env
 backend/.env.local
 
-# Flutter - generated files
+# Flutter - generated files only
 mobile/.dart_tool/
 mobile/build/
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
 mobile/pubspec.lock
-mobile/android/
-mobile/ios/
-mobile/linux/
-mobile/macos/
-mobile/windows/
 mobile/.idea/
 mobile/*.iml
-mobile/analysis_options.yaml
-mobile/README.md
-mobile/test/
 
-# Root Flutter files (created by flutter create .)
+# Root Flutter files created by flutter create .
 .dart_tool/
 build/
 pubspec.lock
-pubspec.yaml
 .flutter-plugins
 .flutter-plugins-dependencies
+.idea/
+*.iml
 android/
 ios/
 linux/
 macos/
 windows/
-.idea/
-*.iml
 analysis_options.yaml
 test/
 rentra.iml
 README.md
 web/
+.metadata
