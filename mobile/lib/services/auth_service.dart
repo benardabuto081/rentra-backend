@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 import '../models/user_model.dart';
 import '../models/organization_model.dart';
@@ -17,6 +18,50 @@ class AuthService {
         'Content-Type': 'application/json',
         if (_token != null) 'Authorization': 'Bearer $_token',
       };
+
+  static Future<void> loadSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('token');
+    final userJson = prefs.getString('user');
+    final orgJson = prefs.getString('organization');
+    if (userJson != null) {
+      _currentUser = UserModel.fromJson(jsonDecode(userJson));
+    }
+    if (orgJson != null) {
+      _currentOrganization = OrganizationModel.fromJson(jsonDecode(orgJson));
+    }
+  }
+
+  static Future<void> _saveSession(
+      String token, UserModel user, OrganizationModel? org) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+    await prefs.setString('user', jsonEncode({
+      'id': user.id,
+      'firstName': user.firstName,
+      'lastName': user.lastName,
+      'email': user.email,
+      'phone': user.phone,
+      'role': user.role,
+      'status': user.status,
+      'organizationId': user.organizationId,
+      'nationalId': user.nationalId,
+      'createdAt': user.createdAt.toIso8601String(),
+    }));
+    if (org != null) {
+      await prefs.setString('organization', jsonEncode({
+        'id': org.id,
+        'name': org.name,
+        'phone': org.phone,
+        'email': org.email,
+        'address': org.address,
+        'city': org.city,
+        'status': org.status,
+        'ownerId': org.ownerId,
+        'createdAt': org.createdAt.toIso8601String(),
+      }));
+    }
+  }
 
   static Future<Map<String, dynamic>> register({
     required String firstName,
@@ -40,7 +85,10 @@ class AuthService {
     if (response.statusCode == 201) {
       _token = data['token'];
       _currentUser = UserModel.fromJson(data['user']);
-      _currentOrganization = OrganizationModel.fromJson(data['organization']);
+      _currentOrganization = data['organization'] != null
+          ? OrganizationModel.fromJson(data['organization'])
+          : null;
+      await _saveSession(_token!, _currentUser!, _currentOrganization);
       return {'success': true, 'data': data};
     } else {
       return {'success': false, 'message': data['message']};
@@ -62,6 +110,7 @@ class AuthService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       _token = data['token'];
       _currentUser = UserModel.fromJson(data['user']);
+      await _saveSession(_token!, _currentUser!, null);
       return {'success': true, 'data': data};
     } else {
       return {'success': false, 'message': data['message']};
@@ -92,9 +141,11 @@ class AuthService {
     }
   }
 
-  static void logout() {
+  static Future<void> logout() async {
     _token = null;
     _currentUser = null;
     _currentOrganization = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
   }
 }
