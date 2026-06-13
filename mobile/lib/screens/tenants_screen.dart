@@ -5,6 +5,7 @@ import '../constants/app_colors.dart';
 import '../constants/api_constants.dart';
 import '../services/auth_service.dart';
 import '../models/tenant_model.dart';
+import 'record_payment_screen.dart';
 
 class TenantsScreen extends StatefulWidget {
   const TenantsScreen({super.key});
@@ -74,7 +75,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                   color: AppColors.textPrimary)),
           const SizedBox(height: 8),
           const Text(
-              'Tenants are added when you generate a passkey for a room',
+              'Tenants are added when they onboard using a room passkey',
               style: TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center),
         ],
@@ -91,66 +92,79 @@ class _TenantsScreenState extends State<TenantsScreen> {
     final statusText =
         t.isActive ? 'Active' : t.isOnNotice ? 'On Notice' : 'Vacated';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(22),
+    return GestureDetector(
+      onTap: () {
+        if (t.isActive) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RecordPaymentScreen(tenant: t),
             ),
-            child: Center(
-              child: Text(
-                t.userId.substring(0, 1).toUpperCase(),
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Center(
+                child: Icon(Icons.person, color: statusColor, size: 22),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Tenant',
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'KES ${t.rentAmount.toStringAsFixed(0)}/month',
                     style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary)),
-                Text('KES ${t.rentAmount.toStringAsFixed(0)}/month',
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textSecondary)),
-                Text(
+                        color: AppColors.textPrimary),
+                  ),
+                  Text(
                     'Since ${t.moveInDate.day}/${t.moveInDate.month}/${t.moveInDate.year}',
                     style: const TextStyle(
-                        fontSize: 12, color: AppColors.textLight)),
-              ],
+                        fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                  if (t.isActive)
+                    const Text(
+                      'Tap to record payment',
+                      style: TextStyle(
+                          fontSize: 11, color: AppColors.textLight),
+                    ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(statusText,
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor)),
             ),
-            child: Text(statusText,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
