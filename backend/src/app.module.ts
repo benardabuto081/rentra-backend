@@ -10,6 +10,7 @@ import { TenantsModule } from './tenants/tenants.module';
 import { PaymentsModule } from './payments/payments.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ShadowRelationshipsModule } from './shadow-relationships/shadow-relationships.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PaymentsModule,
     MaintenanceModule,
     DashboardModule,
+    ShadowRelationshipsModule,
   ],
 })
 export class AppModule {}
