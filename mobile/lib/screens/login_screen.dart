@@ -3,6 +3,7 @@ import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 import 'dashboard_screen.dart';
 import 'register_screen.dart';
+import 'tenant_onboarding_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -197,6 +198,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const TenantOnboardingScreen()),
+                ),
+                child: const Text(
+                  'I have a passkey — set up my tenant account',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
               ),
             ],
           ),

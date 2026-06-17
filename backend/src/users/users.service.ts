@@ -46,12 +46,16 @@ export class UsersService {
     phone: string;
     email?: string;
     password: string;
-    organizationId: string;
+    organizationId?: string;
   }): Promise<User> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = this.usersRepository.create({
-      ...data,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
+      email: data.email,
       password: hashedPassword,
+      organizationId: data.organizationId,
       role: UserRole.TENANT,
       status: UserStatus.ACTIVE,
     });

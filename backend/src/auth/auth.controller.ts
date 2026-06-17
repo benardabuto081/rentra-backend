@@ -19,6 +19,21 @@ export class AuthController {
     return this.authService.registerLandlord(body);
   }
 
+  // POST /auth/register-tenant
+  @Post('register-tenant')
+  async registerTenant(
+    @Body()
+    body: {
+      firstName: string;
+      lastName: string;
+      phone: string;
+      email?: string;
+      password: string;
+    },
+  ) {
+    return this.authService.registerIndependentTenant(body);
+  }
+
   // POST /auth/login
   @Post('login')
   async login(

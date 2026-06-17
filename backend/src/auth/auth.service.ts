@@ -97,6 +97,39 @@ export class AuthService {
     return this.passkeyRepository.save(passkey);
   }
 
+  // INDEPENDENT TENANT REGISTRATION (no landlord/org required)
+  async registerIndependentTenant(data: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email?: string;
+    password: string;
+  }) {
+    const existing = await this.usersService.findByPhone(data.phone);
+    if (existing) {
+      throw new BadRequestException('Phone number already registered');
+    }
+    if (data.email) {
+      const existingEmail = await this.usersService.findByEmail(data.email);
+      if (existingEmail) {
+        throw new BadRequestException('Email already registered');
+      }
+    }
+
+    const tenant = await this.usersService.createTenant({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
+      email: data.email,
+      password: data.password,
+      organizationId: undefined,
+    });
+
+    const token = this.generateToken(tenant.id, UserRole.TENANT);
+    return { user: tenant, token };
+  }
+
+
   // TENANT ONBOARDING WITH PASSKEY
   async onboardTenant(data: {
     passkeyCode: string;

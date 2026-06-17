@@ -140,6 +140,39 @@ class AuthService {
       return {'success': false, 'message': data['message']};
     }
   }
+  
+  static Future<Map<String, dynamic>> onboardTenant({
+    required String passkeyCode,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    String? email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse(ApiConstants.onboardTenant),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'passkeyCode': passkeyCode,
+        'firstName': firstName,
+        'lastName': lastName,
+        'phone': phone,
+        if (email != null && email.isNotEmpty) 'email': email,
+        'password': password,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      _token = data['token'];
+      _currentUser = UserModel.fromJson(data['user']);
+      await _saveSession(_token!, _currentUser!, null);
+      return {'success': true, 'data': data};
+    } else {
+      return {'success': false, 'message': data['message']};
+    }
+  }
 
   static Future<void> logout() async {
     _token = null;
