@@ -8,6 +8,8 @@ import { AuthController } from './auth.controller';
 import { Passkey } from './passkey.entity';
 import { UsersModule } from '../users/users.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
+import { TenantsModule } from '../tenants/tenants.module';
+import { RoomsModule } from '../rooms/rooms.module';
 import { JwtStrategy } from './jwt.strategy';
 
 @Module({
@@ -15,6 +17,8 @@ import { JwtStrategy } from './jwt.strategy';
     TypeOrmModule.forFeature([Passkey]),
     UsersModule,
     OrganizationsModule,
+    TenantsModule,
+    RoomsModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

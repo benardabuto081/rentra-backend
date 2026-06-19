@@ -174,6 +174,72 @@ class AuthService {
     }
   }
 
+  static Future<Map<String, dynamic>> registerTenant({
+    required String firstName,
+    required String lastName,
+    required String phone,
+    String? email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse(ApiConstants.registerTenant),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'firstName': firstName,
+        'lastName': lastName,
+        'phone': phone,
+        if (email != null && email.isNotEmpty) 'email': email,
+        'password': password,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      _token = data['token'];
+      _currentUser = UserModel.fromJson(data['user']);
+      await _saveSession(_token!, _currentUser!, null);
+      return {'success': true, 'data': data};
+    } else {
+      return {'success': false, 'message': data['message']};
+    }
+  }
+
+  static Future<Map<String, dynamic>> createShadowRelationship({
+    required String propertyNickname,
+    required String address,
+    required double rentAmount,
+    required String billingCycle,
+    required int dueDayOfMonth,
+    required String paymentDestinationType,
+    required String paymentDestinationNumber,
+    String? paymentReferenceName,
+  }) async {
+    final response = await http.post(
+      Uri.parse(ApiConstants.shadowRelationships),
+      headers: headers,
+      body: jsonEncode({
+        'propertyNickname': propertyNickname,
+        'address': address,
+        'rentAmount': rentAmount,
+        'billingCycle': billingCycle,
+        'dueDayOfMonth': dueDayOfMonth,
+        'paymentDestinationType': paymentDestinationType,
+        'paymentDestinationNumber': paymentDestinationNumber,
+        if (paymentReferenceName != null && paymentReferenceName.isNotEmpty)
+          'paymentReferenceName': paymentReferenceName,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      return {'success': true, 'data': data};
+    } else {
+      return {'success': false, 'message': data['message']};
+    }
+  }
+
   static Future<void> logout() async {
     _token = null;
     _currentUser = null;

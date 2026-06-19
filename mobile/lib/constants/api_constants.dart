@@ -7,6 +7,8 @@ class ApiConstants {
   static const String tenantLogin = '$baseUrl/auth/tenant-login';
   static const String generatePasskey = '$baseUrl/auth/generate-passkey';
   static const String onboardTenant = '$baseUrl/auth/onboard-tenant';
+  static const String registerTenant = '$baseUrl/auth/register-tenant';
+  static const String shadowRelationships = '$baseUrl/shadow-relationships';
 
   // Organization endpoints
   static String organization(String orgId) => '$baseUrl/organizations/$orgId';

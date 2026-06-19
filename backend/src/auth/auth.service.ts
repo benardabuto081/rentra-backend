@@ -12,6 +12,8 @@ import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/user.entity';
 import * as crypto from 'crypto';
 import { OrganizationsService } from '../organizations/organizations.service';
+import { TenantsService } from '../tenants/tenants.service';
+import { RoomsService } from '../rooms/rooms.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,8 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private organizationsService: OrganizationsService,
+    private tenantsService: TenantsService,
+    private roomsService: RoomsService,
   ) {}
 
   // LANDLORD REGISTRATION
@@ -50,7 +54,7 @@ export class AuthService {
     const token = this.generateToken(user.id, user.role);
     return { user: updatedUser, organization, token };
   }
-  
+
   // LANDLORD / CARETAKER LOGIN
   async login(data: { email: string; password: string }) {
     const user = await this.usersService.findByEmail(data.email);
@@ -129,6 +133,68 @@ export class AuthService {
     return { user: tenant, token };
   }
 
+  // LINK PASSKEY TO AN ALREADY-REGISTERED TENANT (independent -> managed)
+  async linkPasskeyToTenant(data: {
+    tenantUserId: string;
+    passkeyCode: string;
+    rentAmount: number;
+    storageAmount?: number;
+    depositAmount?: number;
+    moveInDate: Date;
+  }) {
+    const passkey = await this.passkeyRepository.findOne({
+      where: { code: data.passkeyCode },
+    });
+
+    if (!passkey) {
+      throw new NotFoundException('Invalid passkey');
+    }
+    if (passkey.status !== PasskeyStatus.ACTIVE) {
+      throw new BadRequestException(
+        'Passkey has already been used or revoked',
+      );
+    }
+    if (passkey.expiresAt && passkey.expiresAt < new Date()) {
+      throw new BadRequestException('Passkey has expired');
+    }
+
+    const tenantUser = await this.usersService.findById(data.tenantUserId);
+    if (!tenantUser) {
+      throw new NotFoundException('Tenant account not found');
+    }
+
+    const room = await this.roomsService.findById(
+      passkey.unitId,
+      passkey.organizationId,
+    );
+
+    await this.usersService.updateOrganization(
+      tenantUser.id,
+      passkey.organizationId,
+    );
+
+    const tenantRecord = await this.tenantsService.create({
+      userId: tenantUser.id,
+      roomId: passkey.unitId,
+      buildingId: room.buildingId,
+      organizationId: passkey.organizationId,
+      rentAmount: data.rentAmount,
+      storageAmount: data.storageAmount,
+      depositAmount: data.depositAmount,
+      moveInDate: data.moveInDate,
+    });
+
+    await this.passkeyRepository.update(passkey.id, {
+      status: PasskeyStatus.USED,
+      usedBy: tenantUser.id,
+      usedAt: new Date(),
+    });
+
+    const updatedUser = await this.usersService.findById(tenantUser.id);
+    const token = this.generateToken(tenantUser.id, UserRole.TENANT);
+
+    return { user: updatedUser, tenant: tenantRecord, token };
+  }
 
   // TENANT ONBOARDING WITH PASSKEY
   async onboardTenant(data: {
