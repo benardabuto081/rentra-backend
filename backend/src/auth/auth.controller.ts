@@ -1,5 +1,6 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -44,6 +45,30 @@ export class AuthController {
     },
   ) {
     return this.authService.login(body);
+  }
+
+  // POST /auth/link-passkey
+  @UseGuards(JwtAuthGuard)
+  @Post('link-passkey')
+  async linkPasskey(
+    @Req() req: any,
+    @Body()
+    body: {
+      passkeyCode: string;
+      rentAmount: number;
+      storageAmount?: number;
+      depositAmount?: number;
+      moveInDate: string;
+    },
+  ) {
+    return this.authService.linkPasskeyToTenant({
+      tenantUserId: req.user.userId,
+      passkeyCode: body.passkeyCode.trim().toUpperCase(),
+      rentAmount: body.rentAmount,
+      storageAmount: body.storageAmount,
+      depositAmount: body.depositAmount,
+      moveInDate: new Date(body.moveInDate),
+    });
   }
 
   // POST /auth/tenant-login
