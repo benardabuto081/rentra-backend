@@ -12,14 +12,20 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
 
+  bool get _isPhone {
+    final text = _identifierController.text.trim();
+    return text.startsWith('0') || text.startsWith('+');
+  }
+
   Future<void> _login() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    if (_identifierController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
       setState(() => _errorMessage = 'Please fill in all fields');
       return;
     }
@@ -29,10 +35,19 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    final result = await AuthService.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    Map<String, dynamic> result;
+
+    if (_isPhone) {
+      result = await AuthService.tenantLogin(
+        phone: _identifierController.text.trim(),
+        password: _passwordController.text,
+      );
+    } else {
+      result = await AuthService.login(
+        email: _identifierController.text.trim(),
+        password: _passwordController.text,
+      );
+    }
 
     setState(() => _isLoading = false);
 
@@ -87,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Sign in to your Rentra account',
+                'Sign in with your email or phone number',
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.textSecondary,
@@ -101,7 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.errorLight,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    border:
+                        Border.all(color: AppColors.error.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
@@ -119,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               const Text(
-                'Email address',
+                'Email or Phone Number',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -128,10 +144,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 6),
               TextField(
-                controller: _emailController,
+                controller: _identifierController,
                 keyboardType: TextInputType.emailAddress,
+                onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(
-                  hintText: 'name@company.com',
+                  hintText: 'name@email.com or 0712345678',
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _identifierController.text.isEmpty
+                    ? ''
+                    : _isPhone
+                        ? 'Signing in as tenant'
+                        : 'Signing in as landlord / caretaker',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _isPhone ? AppColors.success : AppColors.primary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -156,8 +185,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           : Icons.visibility,
                       color: AppColors.textSecondary,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () => setState(
+                        () => _obscurePassword = !_obscurePassword),
                   ),
                 ),
               ),
@@ -183,10 +212,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Don't have an account? ",
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
-                 GestureDetector(
+                  GestureDetector(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const RoleSelectorScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const RoleSelectorScreen()),
                     ),
                     child: const Text(
                       'Sign up',
@@ -207,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
     super.dispose();
   }

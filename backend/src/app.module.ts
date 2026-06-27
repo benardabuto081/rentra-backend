@@ -11,6 +11,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ShadowRelationshipsModule } from './shadow-relationships/shadow-relationships.module';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ShadowRelationshipsModule } from './shadow-relationships/shadow-relatio
     MaintenanceModule,
     DashboardModule,
     ShadowRelationshipsModule,
+    OtpModule,
   ],
 })
 export class AppModule {}

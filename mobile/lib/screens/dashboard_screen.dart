@@ -9,6 +9,8 @@ import 'tenants_screen.dart';
 import 'payments_screen.dart';
 import 'maintenance_screen.dart';
 import 'login_screen.dart';
+import 'passkey_entry_screen.dart';
+import 'add_shadow_property_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -30,7 +32,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboard() async {
     final orgId = AuthService.currentUser?.organizationId;
-    if (orgId == null) return;
+    if (orgId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     final now = DateTime.now();
 
@@ -57,6 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    final isTenant = user?.role == 'tenant';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -65,12 +71,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hello, ${user?.firstName ?? 'Landlord'} 👋',
+              'Hello, ${user?.firstName ?? 'there'} 👋',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const Text(
-              'Rentra Dashboard',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            Text(
+              isTenant ? 'Tenant Dashboard' : 'Rentra Dashboard',
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -89,23 +96,149 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadDashboard,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildStatsRow(),
-                    const SizedBox(height: 24),
-                    _buildFinancialCard(),
-                    const SizedBox(height: 24),
-                    _buildQuickActions(),
-                  ],
+          : isTenant
+              ? _buildTenantDashboard()
+              : RefreshIndicator(
+                  onRefresh: _loadDashboard,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildStatsRow(),
+                        const SizedBox(height: 24),
+                        _buildFinancialCard(),
+                        const SizedBox(height: 24),
+                        _buildQuickActions(),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+    );
+  }
+
+  Widget _buildTenantDashboard() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your Rental',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Welcome to Rentra',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Track your rent payments and build your rental history.',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Getting Started',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _tenantAction(
+                  Icons.key,
+                  'Have a passkey?',
+                  'Link to your landlord\'s room on Rentra',
+                  AppColors.primary,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const PasskeyEntryScreen()),
+                  ),
+                ),
+                const Divider(height: 24),
+                _tenantAction(
+                  Icons.edit_note,
+                  'Track rent manually',
+                  'Add your property details to track payments',
+                  AppColors.accent,
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AddShadowPropertyScreen()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tenantAction(IconData icon, String title, String subtitle,
+      Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: AppColors.textLight),
+        ],
+      ),
     );
   }
 
@@ -124,11 +257,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icons.people, AppColors.success),
         _statCard('On Notice', '${_overview?['totalNoticeTenants'] ?? 0}',
             Icons.notification_important, AppColors.warning),
-        _statCard(
-            'Maintenance',
-            '${_overview?['totalPendingMaintenance'] ?? 0}',
-            Icons.build,
-            AppColors.error),
+        _statCard('Maintenance', '${_overview?['totalPendingMaintenance'] ?? 0}',
+            Icons.build, AppColors.error),
       ],
     );
   }
@@ -195,14 +325,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: _financialItem(
-                    'Expected', 'KES ${_formatAmount(expected)}',
-                    AppColors.textPrimary),
+                child: _financialItem('Expected',
+                    'KES ${_formatAmount(expected)}', AppColors.textPrimary),
               ),
               Expanded(
-                child: _financialItem(
-                    'Collected', 'KES ${_formatAmount(collected)}',
-                    AppColors.success),
+                child: _financialItem('Collected',
+                    'KES ${_formatAmount(collected)}', AppColors.success),
               ),
             ],
           ),
@@ -214,9 +342,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     'Collection Rate', '$rate%', AppColors.primary),
               ),
               Expanded(
-                child: _financialItem(
-                    'Arrears', 'KES ${_formatAmount(arrears)}',
-                    AppColors.error),
+                child: _financialItem('Arrears',
+                    'KES ${_formatAmount(arrears)}', AppColors.error),
               ),
             ],
           ),
@@ -302,7 +429,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _formatAmount(dynamic amount) {
-    final num value = amount is num ? amount : num.parse(amount.toString());
+    final num value =
+        amount is num ? amount : num.parse(amount.toString());
     if (value >= 1000) {
       return '${(value / 1000).toStringAsFixed(1)}K';
     }

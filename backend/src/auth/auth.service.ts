@@ -14,6 +14,8 @@ import * as crypto from 'crypto';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { TenantsService } from '../tenants/tenants.service';
 import { RoomsService } from '../rooms/rooms.service';
+import { OtpService } from '../otp/otp.service';
+import { OtpType } from '../otp/otp.entity';
 
 @Injectable()
 export class AuthService {
@@ -25,10 +27,21 @@ export class AuthService {
     private organizationsService: OrganizationsService,
     private tenantsService: TenantsService,
     private roomsService: RoomsService,
+    private otpService: OtpService,
   ) {}
 
+  async sendOtp(recipient: string, type: 'phone' | 'email') {
+    const otpType = type === 'phone' ? OtpType.PHONE : OtpType.EMAIL;
+    return this.otpService.sendOtp(recipient, otpType);
+  }
+
+  async verifyOtp(recipient: string, type: 'phone' | 'email', code: string) {
+    const otpType = type === 'phone' ? OtpType.PHONE : OtpType.EMAIL;
+    return this.otpService.verifyOtp(recipient, otpType, code);
+  }
+
   // LANDLORD REGISTRATION
- async registerLandlord(data: {
+  async registerLandlord(data: {
     firstName: string;
     lastName: string;
     email: string;
@@ -79,7 +92,6 @@ export class AuthService {
     generatedBy: string;
     expiresInDays?: number;
   }): Promise<Passkey> {
-    // Revoke any existing active passkey for this unit
     await this.passkeyRepository.update(
       { unitId: data.unitId, status: PasskeyStatus.ACTIVE },
       { status: PasskeyStatus.REVOKED },
@@ -150,9 +162,7 @@ export class AuthService {
       throw new NotFoundException('Invalid passkey');
     }
     if (passkey.status !== PasskeyStatus.ACTIVE) {
-      throw new BadRequestException(
-        'Passkey has already been used or revoked',
-      );
+      throw new BadRequestException('Passkey has already been used or revoked');
     }
     if (passkey.expiresAt && passkey.expiresAt < new Date()) {
       throw new BadRequestException('Passkey has expired');
@@ -228,7 +238,6 @@ export class AuthService {
       organizationId: passkey.organizationId,
     });
 
-    // Mark passkey as used
     await this.passkeyRepository.update(passkey.id, {
       status: PasskeyStatus.USED,
       usedBy: tenant.id,

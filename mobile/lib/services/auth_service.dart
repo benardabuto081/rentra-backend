@@ -174,6 +174,28 @@ class AuthService {
     }
   }
 
+  static Future<Map<String, dynamic>> tenantLogin({
+    required String phone,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse(ApiConstants.tenantLogin),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phone, 'password': password}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      _token = data['token'];
+      _currentUser = UserModel.fromJson(data['user']);
+      await _saveSession(_token!, _currentUser!, null);
+      return {'success': true, 'data': data};
+    } else {
+      return {'success': false, 'message': data['message']};
+    }
+  }
+
   static Future<Map<String, dynamic>> registerTenant({
     required String firstName,
     required String lastName,

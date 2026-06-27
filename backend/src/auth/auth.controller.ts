@@ -20,6 +20,22 @@ export class AuthController {
     return this.authService.registerLandlord(body);
   }
 
+  // POST /auth/otp/send
+  @Post('otp/send')
+  async sendOtp(
+    @Body() body: { recipient: string; type: 'phone' | 'email' },
+  ) {
+    return this.authService.sendOtp(body.recipient, body.type);
+  }
+
+  // POST /auth/otp/verify
+  @Post('otp/verify')
+  async verifyOtp(
+    @Body() body: { recipient: string; type: 'phone' | 'email'; code: string },
+  ) {
+    return this.authService.verifyOtp(body.recipient, body.type, body.code);
+  }
+
   // POST /auth/register-tenant
   @Post('register-tenant')
   async registerTenant(
