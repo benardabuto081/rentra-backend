@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
-import 'housing_choice_screen.dart';
+import 'verify_phone_screen.dart';
 
-class TenantOnboardingScreen extends StatefulWidget {
-  const TenantOnboardingScreen({super.key});
+class CreateAccountScreen extends StatefulWidget {
+  const CreateAccountScreen({super.key});
 
   @override
-  State<TenantOnboardingScreen> createState() =>
-      _TenantOnboardingScreenState();
+  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
-class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
+class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -21,12 +21,14 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
   String? _error;
 
   Future<void> _submit() async {
     if (_firstNameController.text.trim().isEmpty ||
         _lastNameController.text.trim().isEmpty ||
         _phoneController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
       setState(() => _error = 'Please fill in all required fields');
       return;
@@ -47,26 +49,37 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
       _error = null;
     });
 
-    final result = await AuthService.registerTenant(
-      firstName: _firstNameController.text.trim(),
-      lastName: _lastNameController.text.trim(),
-      phone: _phoneController.text.trim(),
-      email: _emailController.text.trim().isEmpty
-          ? null
-          : _emailController.text.trim(),
-      password: _passwordController.text,
+    // Store form data in AuthService for use after verification
+    AuthService.pendingRegistration = {
+      'firstName': _firstNameController.text.trim(),
+      'lastName': _lastNameController.text.trim(),
+      'username': _usernameController.text.trim(),
+      'phone': _phoneController.text.trim(),
+      'email': _emailController.text.trim(),
+      'password': _passwordController.text,
+    };
+
+    // Send phone OTP
+    final result = await AuthService.sendOtp(
+      recipient: _phoneController.text.trim(),
+      type: 'phone',
     );
 
     setState(() => _isLoading = false);
 
     if (result['success']) {
       if (!mounted) return;
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const HousingChoiceScreen()),
+        MaterialPageRoute(
+          builder: (_) => VerifyPhoneScreen(
+            phone: _phoneController.text.trim(),
+          ),
+        ),
       );
     } else {
-      setState(() => _error = result['message'] ?? 'Registration failed');
+      setState(
+          () => _error = result['message'] ?? 'Failed to send verification code');
     }
   }
 
@@ -74,39 +87,67 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Tenant Sign Up')),
+      appBar: AppBar(
+        title: const Text('Create Account'),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        foregroundColor: AppColors.textPrimary,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               const Text(
-                'Create your account',
+                'Your Rentra identity',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               const Text(
-                'Track your rent and build your rental history with Rentra',
-                style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                'Create your account. You control your data.',
+                style: TextStyle(
+                    fontSize: 14, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               if (_error != null) _errorBox(),
-              _label('First Name *'),
-              _field(_firstNameController, 'John'),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('First Name *'),
+                        _field(_firstNameController, 'John'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('Last Name *'),
+                        _field(_lastNameController, 'Kamau'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
-              _label('Last Name *'),
-              _field(_lastNameController, 'Kamau'),
+              _label('Username (optional)'),
+              _field(_usernameController, '@johnkamau'),
               const SizedBox(height: 16),
               _label('Phone Number *'),
               _field(_phoneController, '0712345678',
                   type: TextInputType.phone),
               const SizedBox(height: 16),
-              _label('Email (optional)'),
+              _label('Email Address *'),
               _field(_emailController, 'john@gmail.com',
                   type: TextInputType.emailAddress),
               const SizedBox(height: 16),
@@ -123,8 +164,8 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
                           : Icons.visibility,
                       color: AppColors.textSecondary,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () => setState(
+                        () => _obscurePassword = !_obscurePassword),
                   ),
                 ),
               ),
@@ -132,20 +173,42 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
               _label('Confirm Password *'),
               TextField(
                 controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(hintText: '••••••••'),
+                obscureText: _obscureConfirm,
+                decoration: InputDecoration(
+                  hintText: '••••••••',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Create Account'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text('Continue'),
+                ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -199,6 +262,7 @@ class _TenantOnboardingScreenState extends State<TenantOnboardingScreen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _usernameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();

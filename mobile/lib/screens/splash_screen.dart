@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
-import 'dashboard_screen.dart';
+import 'welcome_screen.dart';
+import 'main_shell_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,17 +19,18 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
+    await AuthService.loadSession();
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    if (AuthService.token != null) {
+    if (AuthService.token != null && AuthService.currentUser != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        MaterialPageRoute(builder: (_) => const MainShellScreen()),
       );
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
       );
     }
   }
@@ -43,43 +44,44 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
                 color: AppColors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: const Center(
                 child: Text(
                   'R',
                   style: TextStyle(
                     color: AppColors.primary,
-                    fontSize: 48,
+                    fontSize: 52,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             const Text(
               'Rentra',
               style: TextStyle(
                 color: AppColors.white,
-                fontSize: 32,
+                fontSize: 36,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 1,
               ),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Property Management',
+              'Your rental identity, organized.',
               style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
+                color: Colors.white60,
+                fontSize: 15,
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 56),
             const CircularProgressIndicator(
-              color: Colors.white70,
+              color: Colors.white38,
               strokeWidth: 2,
             ),
           ],
