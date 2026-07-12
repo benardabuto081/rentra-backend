@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
-import 'verify_phone_screen.dart';
+import 'verify_email_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -49,7 +49,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       _error = null;
     });
 
-    // Store form data in AuthService for use after verification
+    // Store registration details
     AuthService.pendingRegistration = {
       'firstName': _firstNameController.text.trim(),
       'lastName': _lastNameController.text.trim(),
@@ -59,27 +59,30 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       'password': _passwordController.text,
     };
 
-    // Send phone OTP
+    // Send EMAIL OTP instead of PHONE OTP
     final result = await AuthService.sendOtp(
-      recipient: _phoneController.text.trim(),
-      type: 'phone',
+      recipient: _emailController.text.trim(),
+      type: 'email',
     );
+
+    if (!mounted) return;
 
     setState(() => _isLoading = false);
 
-    if (result['success']) {
-      if (!mounted) return;
+    if (result['success'] == true) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => VerifyPhoneScreen(
-            phone: _phoneController.text.trim(),
+          builder: (_) => VerifyEmailScreen(
+            email: _emailController.text.trim(),
           ),
         ),
       );
     } else {
-      setState(
-          () => _error = result['message'] ?? 'Failed to send verification code');
+      setState(() {
+        _error =
+            result['message'] ?? 'Failed to send verification code';
+      });
     }
   }
 
@@ -112,7 +115,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const Text(
                 'Create your account. You control your data.',
                 style: TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary),
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 28),
               if (_error != null) _errorBox(),
@@ -144,12 +149,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               _field(_usernameController, '@johnkamau'),
               const SizedBox(height: 16),
               _label('Phone Number *'),
-              _field(_phoneController, '0712345678',
-                  type: TextInputType.phone),
+              _field(
+                _phoneController,
+                '0712345678',
+                type: TextInputType.phone,
+              ),
               const SizedBox(height: 16),
               _label('Email Address *'),
-              _field(_emailController, 'john@gmail.com',
-                  type: TextInputType.emailAddress),
+              _field(
+                _emailController,
+                'john@gmail.com',
+                type: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 16),
               _label('Password *'),
               TextField(
@@ -165,7 +176,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       color: AppColors.textSecondary,
                     ),
                     onPressed: () => setState(
-                        () => _obscurePassword = !_obscurePassword),
+                      () => _obscurePassword = !_obscurePassword,
+                    ),
                   ),
                 ),
               ),
@@ -183,8 +195,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           : Icons.visibility,
                       color: AppColors.textSecondary,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscureConfirm = !_obscureConfirm),
+                    onPressed: () => setState(
+                      () => _obscureConfirm = !_obscureConfirm,
+                    ),
                   ),
                 ),
               ),
@@ -204,7 +217,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : const Text('Continue'),
                 ),
               ),
@@ -223,16 +239,26 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       decoration: BoxDecoration(
         color: AppColors.errorLight,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(
+          color: AppColors.error.withOpacity(0.3),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+          const Icon(
+            Icons.error_outline,
+            color: AppColors.error,
+            size: 18,
+          ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(_error!,
-                style:
-                    const TextStyle(color: AppColors.error, fontSize: 14)),
+            child: Text(
+              _error!,
+              style: const TextStyle(
+                color: AppColors.error,
+                fontSize: 14,
+              ),
+            ),
           ),
         ],
       ),
@@ -242,20 +268,29 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text,
-          style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary)),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
+      ),
     );
   }
 
-  Widget _field(TextEditingController c, String hint,
-      {TextInputType type = TextInputType.text}) {
+  Widget _field(
+    TextEditingController controller,
+    String hint, {
+    TextInputType type = TextInputType.text,
+  }) {
     return TextField(
-        controller: c,
-        keyboardType: type,
-        decoration: InputDecoration(hintText: hint));
+      controller: controller,
+      keyboardType: type,
+      decoration: InputDecoration(
+        hintText: hint,
+      ),
+    );
   }
 
   @override
