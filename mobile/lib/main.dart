@@ -21,7 +21,6 @@ class RentraApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,
           primary: AppColors.primary,
-          background: AppColors.background,
         ),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
@@ -41,7 +40,7 @@ class RentraApp extends StatelessWidget {
             foregroundColor: AppColors.white,
             minimumSize: const Size(double.infinity, 48),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -62,7 +61,8 @@ class RentraApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            borderSide:
+                const BorderSide(color: AppColors.primary, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -70,7 +70,7 @@ class RentraApp extends StatelessWidget {
           ),
         ),
         cardTheme: CardThemeData(
-          color: AppColors.cardBackground,
+          color: AppColors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
